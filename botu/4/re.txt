@@ -1,0 +1,10 @@
+(.+) (.+);
+static PyObject * SoundFont_get_$2 (CustomObject *self, PyObject *args) {
+  return self->sf->$2 $1;
+}
+--------------------------------------------------
+return (.+) QString
+return PyBytes_FromString($1.toLocal8Bit().data())
+--------------------------------------------------
+return (.+) char\*
+return PyBytes_FromString($1)
