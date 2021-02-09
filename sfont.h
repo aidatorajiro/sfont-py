@@ -158,6 +158,7 @@ struct Sample {
 //---------------------------------------------------------
 
 class SoundFont {
+   public:
       QString path;
       sfVersionTag version;
       char* engine;
@@ -239,8 +240,7 @@ class SoundFont {
       int writeUncompressedSample(Sample* s);
       bool writeCSample(Sample*, int);
       bool write();
-
-   public:
+      
       SoundFont(const QString&);
       ~SoundFont();
       bool read();
@@ -251,11 +251,9 @@ class SoundFont {
       void dumpPresets();
 
 #ifndef SFTOOLS_NOXML
-    private:
       void write(Xml&, Zone*);
       bool writeSampleFile(Sample*, QString);
 
-    public:
       bool readXml(QFile*);
       bool writeXml(QFile*);
 #endif

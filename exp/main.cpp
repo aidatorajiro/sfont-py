@@ -1,7 +1,9 @@
 #define SFTOOLS_NOXML
 
+#include <vector>
 #include "sfont.h"
 #include "sfont.cpp"
+using namespace std;
 
 int main(int argc, char *argv[]){
   const QString &qs = QString("../FluidR3_GM.sf2");
@@ -11,20 +13,20 @@ int main(int argc, char *argv[]){
   
   printf("=== TYPE SIZES ===\n");
   
-  printf("sfVersionTag: %d\n", sizeof(sfVersionTag));
-  printf("Modulator: %d\n", sizeof(Modulator));
-  printf("Generator: %d\n", sizeof(Generator));
-  printf("Transform: %d\n", sizeof(Transform));
-  printf("ModulatorList: %d\n", sizeof(ModulatorList));
-  printf("GeneratorAmount: %d\n", sizeof(GeneratorAmount));
-  printf("GeneratorList: %d\n", sizeof(GeneratorList));
-  printf("Zone: %d\n", sizeof(Zone));
-  printf("Preset: %d\n", sizeof(Preset));
-  printf("Instrument: %d\n", sizeof(Instrument));
-  printf("Sample: %d\n", sizeof(Sample));
-  printf("SoundFont: %d\n", sizeof(SoundFont));
-  printf("QString: %d\n", sizeof(QString));
-  printf("QList: %d\n", sizeof(QList<QString>));
+  printf("sfVersionTag: %lu\n", sizeof(sfVersionTag));
+  printf("Modulator: %lu\n", sizeof(Modulator));
+  printf("Generator: %lu\n", sizeof(Generator));
+  printf("Transform: %lu\n", sizeof(Transform));
+  printf("ModulatorList: %lu\n", sizeof(ModulatorList));
+  printf("GeneratorAmount: %lu\n", sizeof(GeneratorAmount));
+  printf("GeneratorList: %lu\n", sizeof(GeneratorList));
+  printf("Zone: %lu\n", sizeof(Zone));
+  printf("Preset: %lu\n", sizeof(Preset));
+  printf("Instrument: %lu\n", sizeof(Instrument));
+  printf("Sample: %lu\n", sizeof(Sample));
+  printf("SoundFont: %lu\n", sizeof(SoundFont));
+  printf("QString: %lu\n", sizeof(QString));
+  printf("QList: %lu\n", sizeof(QList<SoundFont>));
   
   return 0;
 }
