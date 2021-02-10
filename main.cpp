@@ -10,12 +10,19 @@ extern "C" SfTools::SoundFont * read_sound_font (char * path) {
     return sf;
 }
 
-struct VerySimpleList {
-    int size;
-    void * pointer;
-};
+extern "C" QList<void *> qlist_new () {
+    QList<void *> list;
+    return list;
+}
 
-extern "C" VerySimpleList qlist_size_first (QList<QString> in_obj) {
-    VerySimpleList r = {in_obj.size(), &in_obj.first()};
-    return r;
+extern "C" void qlist_add (QList<void *> in, void * elem) {
+    in.append(elem);
+}
+
+extern "C" void * qlist_get (QList<void *> in, int ind) {
+    return in[ind];
+}
+
+extern "C" int qlist_size (QList<void *> in) {
+    return in.size();
 }

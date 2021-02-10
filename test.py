@@ -76,6 +76,16 @@ class Generator(Enum):
 class Transform(Enum):
     Linear = 0
 
+class QString(Structure):
+    _fields_ = [
+        ("data", c_ulonglong)
+    ]
+
+class QList(Structure):
+    _fields_ = [
+        ("data", c_ulonglong)
+    ]
+
 class ModulatorList(Structure):
     _fields_ = [
         ("src", c_int), # Modulator
@@ -99,8 +109,8 @@ class GeneratorList(Structure):
 
 class Zone(Structure):
     _fields_ = [
-        ("generators", c_void_p), # QList<GeneratorList*>
-        ("modulators", c_void_p), # QList<ModulatorList*>
+        ("generators", QList), # QList<GeneratorList*>
+        ("modulators", QList), # QList<ModulatorList*>
         ("instrumentIndex", c_int),
     ]
 
@@ -113,14 +123,14 @@ class Preset(Structure):
         ("library", c_int),
         ("genre", c_int),
         ("morphology", c_int),
-        ("zones", c_void_p), # QList<Zone*>
+        ("zones", QList), # QList<Zone*>
     ]
 
 class Instrument(Structure):
     _fields_ = [
         ("name", c_char_p),
         ("index", c_int),
-        ("zones", c_void_p), # QList<Zone*>
+        ("zones", QList), # QList<Zone*>
     ]
 
 class Sample(Structure):
@@ -139,7 +149,7 @@ class Sample(Structure):
 
 class SoundFont(Structure):
     _fields_ = [
-        ("path", c_void_p), # QString
+        ("path", QString), # QString
         ("version", sfVersionTag), # sfVersionTag
         ("engine", c_char_p),
         ("name", c_char_p),
@@ -153,11 +163,11 @@ class SoundFont(Structure):
         ("iver", sfVersionTag), # sfVersionTag
         ("samplePos", c_int),
         ("sampleLen", c_int),
-        ("presets", c_void_p), # QList<Preset*>
-        ("instruments", c_void_p), # QList<Instrument*>
-        ("pZones", c_void_p), # QList<Zone*>
-        ("iZones", c_void_p), # QList<Zone*>
-        ("samples", c_void_p), # QList<Sample*>
+        ("presets", QList), # QList<Preset*>
+        ("instruments", QList), # QList<Instrument*>
+        ("pZones", QList), # QList<Zone*>
+        ("iZones", QList), # QList<Zone*>
+        ("samples", QList), # QList<Sample*>
     ]
 
 sfont = cdll.LoadLibrary("sfont.dylib")
@@ -176,3 +186,17 @@ sfont.read_sound_font.argtypes = [c_char_p]
 sfont.read_sound_font.restype = POINTER(SoundFont)
 
 sf = sfont.read_sound_font(b"FluidR3_GM.sf2")
+
+sfont.qlist_new.argtypes = []
+sfont.qlist_new.restype = QList
+
+sfont.qlist_add.argtypes = [QList, c_void_p]
+
+sfont.qlist_get.argtypes = [QList, c_int]
+sfont.qlist_get.restype = c_void_p
+
+sfont.qlist_size.argtypes = [QList]
+sfont.qlist_size.restype = c_int
+
+print(sfont.qlist_get(sf.contents.presets, 1))
+

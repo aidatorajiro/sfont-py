@@ -26,7 +26,8 @@ int main(int argc, char *argv[]){
   printf("Sample: %lu\n", sizeof(Sample));
   printf("SoundFont: %lu\n", sizeof(SoundFont));
   printf("QString: %lu\n", sizeof(QString));
-  printf("QList: %lu\n", sizeof(QList<SoundFont>));
+  printf("QList: %lu\n", sizeof(QList<SoundFont*>));
+  printf("%d\n", sf->presets.size());
   
   return 0;
 }
