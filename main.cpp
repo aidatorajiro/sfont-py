@@ -10,9 +10,8 @@ extern "C" SfTools::SoundFont * read_sound_font (char * path) {
     return sf;
 }
 
-extern "C" QList<void *> qlist_new () {
-    QList<void *> list;
-    return list;
+extern "C" QList<void *> * qlist_new () {
+    return new QList<void *>();
 }
 
 extern "C" void qlist_add (QList<void *> *in, void * elem) {
