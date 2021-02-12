@@ -78,13 +78,35 @@ class Transform(Enum):
 
 class QString(Structure):
     _fields_ = [
-        ("data", c_ulonglong)
+        ("data", c_void_p)
     ]
 
-class QList(Structure):
-    _fields_ = [
-        ("data", c_ulonglong)
-    ]
+ALL_QLISTS = {}
+
+"""
+def create_list(in_ptr, in_type):
+    size = sfont.qlist_size(pointer(c_void_p(in_ptr)))
+    first = sfont.qlist_first(pointer(c_void_p(in_ptr)))
+    return (POINTER(in_type * size))(cast(first, POINTER(in_type)))
+"""
+
+def QList(in_type):
+    if in_type in ALL_QLISTS:
+        return ALL_QLISTS[in_type]
+    
+    class Insta(Structure):
+        _fields_ = [
+            ("ptr", c_void_p)
+        ]
+        datatype = in_type
+        def size(self):
+            return sfont.qlist_size(pointer(c_void_p(self.ptr)))
+        def first(self):
+            return cast(sfont.qlist_first(pointer(c_void_p(self.ptr))), POINTER(self.datatype))
+    
+    Insta.__name__ = "QList_%s" % in_type.__name__
+    ALL_QLISTS[in_type] = Insta
+    return Insta
 
 class ModulatorList(Structure):
     _fields_ = [
@@ -109,8 +131,8 @@ class GeneratorList(Structure):
 
 class Zone(Structure):
     _fields_ = [
-        ("generators", QList), # QList<GeneratorList*>
-        ("modulators", QList), # QList<ModulatorList*>
+        ("generators", QList(POINTER(GeneratorList))), # QList<GeneratorList*>
+        ("modulators", QList(POINTER(ModulatorList))), # QList<ModulatorList*>
         ("instrumentIndex", c_int),
     ]
 
@@ -123,14 +145,14 @@ class Preset(Structure):
         ("library", c_int),
         ("genre", c_int),
         ("morphology", c_int),
-        ("zones", QList), # QList<Zone*>
+        ("zones", QList(POINTER(Zone))), # QList<Zone*>
     ]
 
 class Instrument(Structure):
     _fields_ = [
         ("name", c_char_p),
         ("index", c_int),
-        ("zones", QList), # QList<Zone*>
+        ("zones", QList(POINTER(Zone))), # QList<Zone*>
     ]
 
 class Sample(Structure):
@@ -163,11 +185,11 @@ class SoundFont(Structure):
         ("iver", sfVersionTag), # sfVersionTag
         ("samplePos", c_int),
         ("sampleLen", c_int),
-        ("presets", QList), # QList<Preset*>
-        ("instruments", QList), # QList<Instrument*>
-        ("pZones", QList), # QList<Zone*>
-        ("iZones", QList), # QList<Zone*>
-        ("samples", QList), # QList<Sample*>
+        ("presets", QList(POINTER(Preset))), # QList<Preset*>
+        ("instruments", QList(POINTER(Instrument))), # QList<Instrument*>
+        ("pZones", QList(POINTER(Zone))), # QList<Zone*>
+        ("iZones", QList(POINTER(Zone))), # QList<Zone*>
+        ("samples", QList(POINTER(Sample))), # QList<Sample*>
     ]
 
 sfont = cdll.LoadLibrary("sfont.dylib")
@@ -185,17 +207,13 @@ print("SoundFont: %d" % ctypes.sizeof(SoundFont))
 sfont.read_sound_font.argtypes = [c_char_p]
 sfont.read_sound_font.restype = POINTER(SoundFont)
 
-sf = sfont.read_sound_font(b"FluidR3_GM.sf2")
+sf = sfont.read_sound_font(b"FluidR3_GM.sf2").contents
 
-sfont.qlist_new.argtypes = []
-sfont.qlist_new.restype = QList
-
-sfont.qlist_add.argtypes = [POINTER(QList), c_void_p]
-
-sfont.qlist_get.argtypes = [POINTER(QList), c_int]
-sfont.qlist_get.restype = c_void_p
-
-sfont.qlist_size.argtypes = [POINTER(QList)]
+sfont.qlist_size.argtypes = [POINTER(c_void_p)]
 sfont.qlist_size.restype = c_int
 
-print(sfont.qlist_size(sf.contents.presets))
+sfont.qlist_first.argtypes = [POINTER(c_void_p)]
+sfont.qlist_first.restype = POINTER(c_void_p)
+
+print(sf.presets.size() == 189)
+print(sf.presets.first()[10].contents.name == b'Burst Noise')
