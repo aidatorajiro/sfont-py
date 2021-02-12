@@ -190,13 +190,12 @@ sf = sfont.read_sound_font(b"FluidR3_GM.sf2")
 sfont.qlist_new.argtypes = []
 sfont.qlist_new.restype = QList
 
-sfont.qlist_add.argtypes = [QList, c_void_p]
+sfont.qlist_add.argtypes = [POINTER(QList), c_void_p]
 
-sfont.qlist_get.argtypes = [QList, c_int]
+sfont.qlist_get.argtypes = [POINTER(QList), c_int]
 sfont.qlist_get.restype = c_void_p
 
-sfont.qlist_size.argtypes = [QList]
+sfont.qlist_size.argtypes = [POINTER(QList)]
 sfont.qlist_size.restype = c_int
 
-print(sfont.qlist_get(sf.contents.presets, 1))
-
+print(sfont.qlist_size(sf.contents.presets))
