@@ -97,7 +97,10 @@ def QList(in_type):
         def size(self):
             return sfont.qlist_size(pointer(c_void_p(self.ptr)))
         def array(self):
-            return cast(sfont.qlist_first(pointer(c_void_p(self.ptr))), POINTER(self.datatype * self.size()))[0]
+            if self.size() == 0:
+                return []
+            else:
+                return cast(sfont.qlist_first(pointer(c_void_p(self.ptr))), POINTER(self.datatype * self.size()))[0]
     
     Insta.__name__ = "QList_%s" % in_type.__name__
     ALL_QLISTS[in_type] = Insta
