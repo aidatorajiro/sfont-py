@@ -10,6 +10,12 @@ extern "C" SfTools::SoundFont * read_sound_font (char * path) {
     return sf;
 }
 
+extern "C" SfTools::SoundFont * new_sound_font () {
+    const QString &qs = QString("");
+    SfTools::SoundFont *sf = new SfTools::SoundFont(qs);
+    return sf;
+}
+
 extern "C" int qlist_size (QList<void *> *in) {
     return in->size();
 }
