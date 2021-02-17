@@ -40,6 +40,15 @@ class SfontTest(unittest.TestCase):
         sf = sfont.read_sound_font(b"FluidR3_GM.sf2").contents
         self.assertEqual(sf.presets.size(), 189)
         self.assertEqual(sf.presets.array()[10].contents.name, b'Burst Noise')
+    
+    def test_qlist_new(self):
+        num = 114514
+        size = 13
+        orig_lst = (POINTER(c_int64) * size)(*map(lambda x: pointer(c_int64(x)), [num] * size))
+        qlist = cast(sfont.qlist_new(size, cast(pointer(orig_lst), POINTER(c_void_p))),
+                     POINTER(QList(POINTER(c_int64))))[0]
+        self.assertEqual(qlist.size(), size)
+        self.assertEqual(qlist.array()[5][0], num)
 
 if __name__ == '__main__':
     unittest.main()

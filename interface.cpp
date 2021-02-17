@@ -23,3 +23,11 @@ extern "C" int qlist_size (QList<void *> *in) {
 extern "C" void ** qlist_first (QList<void *> *in) {
     return &in->first();
 }
+
+extern "C" QList<void *> * qlist_new (int size, void ** simple_list) {
+    QList<void *> * qlist = new QList<void *>;
+    for (int i = 0; i < size; i++) {
+        qlist->append(simple_list[i]);
+    }
+    return qlist;
+}

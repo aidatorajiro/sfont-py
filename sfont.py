@@ -106,6 +106,10 @@ def QList(in_type):
     ALL_QLISTS[in_type] = Insta
     return Insta
 
+def mkList(list, datatype):
+    new = cast(sfont.qlist_new(), POINTER(QList(datatype)))[0]
+    len(list)
+
 class ModulatorList(Structure):
     _fields_ = [
         ("src", c_int), # Modulator
@@ -200,6 +204,9 @@ sfont.qlist_size.restype = c_int
 
 sfont.qlist_first.argtypes = [POINTER(c_void_p)]
 sfont.qlist_first.restype = POINTER(c_void_p)
+
+sfont.qlist_new.argtypes = [c_int, POINTER(c_void_p)]
+sfont.qlist_new.restype = POINTER(c_void_p)
 
 sfont.new_sound_font.argtypes = []
 sfont.new_sound_font.restype = POINTER(SoundFont)
