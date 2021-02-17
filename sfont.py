@@ -96,12 +96,12 @@ def QList(in_type):
         def __len__(self):
             return self.size()
         def __getitem__(self, key):
-            return self.array()[key]
+            return self.raw_array()[key][0]
         def __setitem__(self, key, value):
-            self.array()[key] = value
+            self.raw_array()[key][0] = value
         def size(self):
             return sfont.qlist_size(pointer(c_void_p(self.ptr)))
-        def array(self):
+        def raw_array(self):
             if self.size() == 0:
                 return []
             else:
