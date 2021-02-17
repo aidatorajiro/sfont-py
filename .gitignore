@@ -170,3 +170,4 @@ bin
 *.dylib
 *.out
 *.dSYM
+test_wav.wav

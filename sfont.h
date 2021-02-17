@@ -157,6 +157,7 @@ struct Sample {
 //---------------------------------------------------------
 
 class SoundFont {
+public:
       QString path;
       sfVersionTag version;
       char* engine;
@@ -233,7 +234,6 @@ class SoundFont {
       bool writeCSample(Sample*, int);
       char* readCompressedSample(Sample*);
 
-   public:
       SoundFont(const QString&);
       ~SoundFont();
       bool read();

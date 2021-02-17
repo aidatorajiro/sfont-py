@@ -18,13 +18,15 @@ extern "C" SoundFont * new_sound_font () {
     return sf;
 }
 
-extern "C" bool write_sound_font (SoundFont *sf, char * path) {
+extern "C" bool write_sound_font (SoundFont *sf, char * path, char * path_wav) {
     const QString &qs = QString(path);
     QFile f(qs);
     if (!f.open(QIODevice::ReadWrite)) {
         fprintf(stderr, "cannot open %s\n", f.fileName().toLocal8Bit().data());
         return false;
     }
+    const QString &qs_wav = QString(path_wav);
+    sf->path = qs_wav;
     if (!sf->write(&f, 0, 0, 0)) {
         fprintf(stderr, "cannot write successfully\n");
         f.close();
