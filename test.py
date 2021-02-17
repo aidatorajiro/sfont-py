@@ -33,8 +33,8 @@ class SfontTest(unittest.TestCase):
         self.assertEqual(ctypes.sizeof(Zone), 24)
         self.assertEqual(ctypes.sizeof(Preset), 40)
         self.assertEqual(ctypes.sizeof(Instrument), 24)
-        self.assertEqual(ctypes.sizeof(Sample), 48)
-        self.assertEqual(ctypes.sizeof(SoundFont), 144)
+        self.assertEqual(ctypes.sizeof(Sample), 40)
+        self.assertEqual(ctypes.sizeof(SoundFont), 128)
 
     def test_data(self):
         sf = sfont.read_sound_font(b"FluidR3_GM.sf2").contents

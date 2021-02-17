@@ -177,7 +177,6 @@ class Sample(Structure):
         ("samplerate", c_uint),
         ("origpitch", c_int),
         ("pitchadj", c_int),
-        ("sampleLink", c_int),
         ("sampletype", c_int)
     ]
 
@@ -193,8 +192,6 @@ class SoundFont(Structure):
         ("creator", c_char_p),
         ("product", c_char_p),
         ("copyright", c_char_p),
-        ("irom", c_char_p),
-        ("iver", sfVersionTag), # sfVersionTag
         ("samplePos", c_int),
         ("sampleLen", c_int),
         ("presets", QList(Preset)), # QList<Preset*>

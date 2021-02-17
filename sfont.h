@@ -1,33 +1,35 @@
 //=============================================================================
-//  MuseScore
-//  Linux Music Score Editor
-//  $Id:$
+//  MuseScore sftools
 //
 //  Copyright (C) 2010 Werner Schweer and others
 //
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License version 2.
+//  This work is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Library General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
+//  In addition, as a special exception, licensor gives permission to
+//  link the code of this work with the OpenSSL Library (or with modified
+//  versions of OpenSSL that use the same license as OpenSSL), and
+//  distribute linked combinations including the two. You must obey the
+//  GNU General Public License in all respects for all of the code used
+//  other than OpenSSL. If you modify this file, you may extend this
+//  exception to your version of the file, but you are not obligated to
+//  do so. If you do not wish to do so, delete this exception statement
+//  from your version. (This exception is necessary should this work be
+//  included in a GPL-licenced work.)
 //
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//  See COPYING.LIB for the licence text and disclaimer of warranty.
 //=============================================================================
 
-#ifndef SFONT_H
-#define SFONT_H
+#ifndef __SOUNDFONT_H__
+#define __SOUNDFONT_H__
 
 #include <QtCore/QString>
 #include <QtCore/QList>
 
 class Xml;
 class QFile;
-
-namespace SfTools {
 
 //---------------------------------------------------------
 //   sfVersionTag
@@ -107,16 +109,14 @@ struct Zone {
 //---------------------------------------------------------
 
 struct Preset {
-      char* name;
-      int preset;
-      int bank;
-      int presetBagNdx; // used only for read
-      int library;
-      int genre;
-      int morphology;
+      char* name         {0};
+      int preset         {0};
+      int bank           {0};
+      int presetBagNdx   {0}; // used only for read
+      int library        {0};
+      int genre          {0};
+      int morphology     {0};
       QList<Zone*> zones;
-
-      Preset():name(nullptr), preset(0), bank(0), presetBagNdx(0), library(0), genre(0), morphology(0) {}
       };
 
 //---------------------------------------------------------
@@ -146,7 +146,6 @@ struct Sample {
 
       int origpitch;
       int pitchadj;
-      int sampleLink;
       int sampletype;
 
       Sample();
@@ -158,7 +157,6 @@ struct Sample {
 //---------------------------------------------------------
 
 class SoundFont {
-   public:
       QString path;
       sfVersionTag version;
       char* engine;
@@ -169,8 +167,6 @@ class SoundFont {
       char* creator;
       char* product;
       char* copyright;
-      char* irom;
-      sfVersionTag iver;
 
       int samplePos;
       int sampleLen;
@@ -185,13 +181,9 @@ class SoundFont {
       QFile* file;
       FILE* f;
 
-      bool _compress;
       double _oggQuality;
       double _oggAmp;
       qint64 _oggSerial;
-
-      // Extra option
-      bool _smallSf;
 
       unsigned readDword();
       int readWord();
@@ -204,7 +196,7 @@ class SoundFont {
       void readSignature(char* signature);
       void skip(int);
       void readSection(const char* fourcc, int len);
-      void readVersion(sfVersionTag* v);
+      void readVersion();
       char* readString(int);
       void readPhdr(int);
       void readBag(int, QList<Zone*>*);
@@ -219,6 +211,8 @@ class SoundFont {
       void writeChar(char);
       void writeShort(short);
       void write(const char* p, int n);
+      void write(Xml&, Zone*);
+      bool writeSampleFile(Sample*, QString);
       void writeSample(const Sample*);
       void writeStringSection(const char* fourcc, char* s);
       void writePreset(int zoneIdx, const Preset*);
@@ -227,7 +221,6 @@ class SoundFont {
       void writeInstrument(int zoneIdx, const Instrument*);
 
       void writeIfil();
-      void writeIver();
       void writeSmpl();
       void writePhdr();
       void writeBag(const char* fourcc, QList<Zone*>*);
@@ -237,27 +230,18 @@ class SoundFont {
       void writeShdr();
 
       int writeCompressedSample(Sample*);
-      int writeUncompressedSample(Sample* s);
       bool writeCSample(Sample*, int);
-      bool write();
-      
+      char* readCompressedSample(Sample*);
+
+   public:
       SoundFont(const QString&);
       ~SoundFont();
       bool read();
-      bool compress(QFile* f, double oggQuality, double oggAmp, qint64 oggSerial = rand());
-      bool uncompress(QFile* f);
+      bool write(QFile*, double oggQuality, double oggAmp, qint64 oggSerial);
+      bool readXml(QFile*);
+      bool writeXml(QFile*);
       bool writeCode(QList<int>);
       bool writeCode();
       void dumpPresets();
-
-#ifndef SFTOOLS_NOXML
-      void write(Xml&, Zone*);
-      bool writeSampleFile(Sample*, QString);
-
-      bool readXml(QFile*);
-      bool writeXml(QFile*);
+      };
 #endif
-};
-}
-#endif
-

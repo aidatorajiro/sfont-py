@@ -1,21 +1,25 @@
 //=============================================================================
-//  MuseScore
-//  Linux Music Score Editor
-//  $Id:$
+//  MuseScore sftools
 //
 //  Copyright (C) 2010 Werner Schweer and others
 //
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License version 2.
+//  This work is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Library General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
+//  In addition, as a special exception, licensor gives permission to
+//  link the code of this work with the OpenSSL Library (or with modified
+//  versions of OpenSSL that use the same license as OpenSSL), and
+//  distribute linked combinations including the two. You must obey the
+//  GNU General Public License in all respects for all of the code used
+//  other than OpenSSL. If you modify this file, you may extend this
+//  exception to your version of the file, but you are not obligated to
+//  do so. If you do not wish to do so, delete this exception statement
+//  from your version. (This exception is necessary should this work be
+//  included in a GPL-licenced work.)
 //
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//  See COPYING.LIB for the licence text and disclaimer of warranty.
 //=============================================================================
 
 #include <stdio.h>
@@ -23,21 +27,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <sndfile.h>
 #include <vorbis/vorbisenc.h>
-#include <vorbis/codec.h>
-#include <vorbis/vorbisfile.h>
 
 #include "sfont.h"
-#include "time.h"
-
-#ifndef SFTOOLS_NOXML
 #include "xml.h"
-#include <sndfile.h>
-#endif
+#include "time.h"
 
 #include <QtCore/QFile>
 
-using namespace SfTools;
+extern bool smallSf;    // create small sf
 
 // #define DEBUG
 
@@ -49,9 +48,9 @@ using namespace SfTools;
        __value; })
 #else
 #define BE_LONG(x) ((((x)&0xFF)<<24) | \
-              (((x)&0xFF00)<<8) | \
-              (((x)&0xFF0000)>>8) | \
-              (((x)>>24)&0xFF))
+		      (((x)&0xFF00)<<8) | \
+		      (((x)&0xFF0000)>>8) | \
+		      (((x)>>24)&0xFF))
 #endif
 
 #define FOURCC(a, b, c, d) a << 24 | b << 16 | c << 8 | d
@@ -66,16 +65,7 @@ static const bool writeCompressed = true;
 
 Sample::Sample()
       {
-      name = nullptr;
-      start = 0;
-      end = 0;
-      loopstart = 0;
-      loopend = 0;
-      samplerate = 0;
-      origpitch = 0;
-      pitchadj = 0;
-      sampleLink = 0;
-      sampletype = 0;
+      name = 0;
       }
 
 Sample::~Sample()
@@ -89,7 +79,7 @@ Sample::~Sample()
 
 Instrument::Instrument()
       {
-      name = nullptr;
+      name = 0;
       }
 
 Instrument::~Instrument()
@@ -104,20 +94,14 @@ Instrument::~Instrument()
 SoundFont::SoundFont(const QString& s)
       {
       path      = s;
-      engine    = nullptr;
-      name      = nullptr;
-      date      = nullptr;
-      comment   = nullptr;
-      tools     = nullptr;
-      creator   = nullptr;
-      product   = nullptr;
-      copyright = nullptr;
-      irom      = nullptr;
-      version.major = 0;
-      version.minor = 0;
-      iver.major = 0;
-      iver.minor = 0;
-      _smallSf   = false;
+      engine    = 0;
+      name      = 0;
+      date      = 0;
+      comment   = 0;
+      tools     = 0;
+      creator   = 0;
+      product   = 0;
+      copyright = 0;
       }
 
 SoundFont::~SoundFont()
@@ -130,7 +114,6 @@ SoundFont::~SoundFont()
       free(creator);
       free(product);
       free(copyright);
-      free(irom);
       }
 
 //---------------------------------------------------------
@@ -232,7 +215,7 @@ unsigned SoundFont::readDword()
       if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
             return BE_LONG(format);
       else
-        return format;
+		return format;
       }
 
 //---------------------------------------------------------
@@ -298,7 +281,7 @@ int SoundFont::readWord()
       if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
             return BE_SHORT(format);
       else
-        return format;
+		return format;
       }
 
 //---------------------------------------------------------
@@ -313,7 +296,7 @@ int SoundFont::readShort()
       if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
             return BE_SHORT(format);
       else
-        return format;
+		return format;
       }
 
 //---------------------------------------------------------
@@ -344,13 +327,13 @@ int SoundFont::readChar()
 //   readVersion
 //---------------------------------------------------------
 
-void SoundFont::readVersion(sfVersionTag * v)
+void SoundFont::readVersion()
       {
       unsigned char data[4];
       if (file->read((char*)data, 4) != 4)
             throw(QString("unexpected end of file\n"));
-      v->major = data[0] + (data[1] << 8);
-      v->minor = data[2] + (data[3] << 8);
+      version.major = data[0] + (data[1] << 8);
+      version.minor = data[2] + (data[3] << 8);
       }
 
 //---------------------------------------------------------
@@ -377,7 +360,7 @@ void SoundFont::readSection(const char* fourcc, int len)
 
       switch(FOURCC(fourcc[0], fourcc[1], fourcc[2], fourcc[3])) {
             case FOURCC('i', 'f', 'i', 'l'):    // version
-                  readVersion(&version);
+                  readVersion();
                   break;
             case FOURCC('I','N','A','M'):       // sound font name
                   name = readString(len);
@@ -408,9 +391,6 @@ void SoundFont::readSection(const char* fourcc, int len)
                   sampleLen = len;
                   skip(len);
                   break;
-            case FOURCC('s','m','2','4'): // audio samples (24-bit part)
-                  skip(len); // Just skip it
-                  break;
             case FOURCC('p','h','d','r'): // preset headers
                   readPhdr(len);
                   break;
@@ -439,14 +419,11 @@ void SoundFont::readSection(const char* fourcc, int len)
                   readShdr(len);
                   break;
             case FOURCC('i', 'r', 'o', 'm'):    // sample rom
-                  irom = readString(len);
-                  break;
             case FOURCC('i', 'v', 'e', 'r'):    // sample rom version
-                  readVersion(&iver);
-                  break;
             default:
                   skip(len);
                   throw(QString("unknown fourcc <%1>").arg(fourcc));
+                  break;
             }
       }
 
@@ -623,9 +600,11 @@ void SoundFont::readShdr(int size)
             s->samplerate = readDword();
             s->origpitch  = readByte();
             s->pitchadj   = readChar();
-            s->sampleLink = readWord();
+            readWord();       // sampleLink
             s->sampletype = readWord();
 
+            s->loopstart -= s->start;
+            s->loopend   -= s->start;
 // printf("readFontHeader %d %d   %d %d\n", s->start, s->end, s->loopstart, s->loopend);
             samples.append(s);
             }
@@ -633,11 +612,133 @@ void SoundFont::readShdr(int size)
       }
 
 //---------------------------------------------------------
+//   writeXml
+//---------------------------------------------------------
+
+bool SoundFont::writeXml(QFile* f)
+      {
+      Xml xml(f);
+
+      xml.header();
+      xml.stag("Sfont");
+      xml.tag("version", QString("%1.%2").arg(version.major).arg(version.minor));
+      if (name)
+            xml.tag("name",      Xml::xmlString(name));
+      if (engine)
+            xml.tag("engine",    Xml::xmlString(engine));
+      if (date)
+            xml.tag("date",      Xml::xmlString(date));
+      if (comment)
+            xml.tag("comment",   Xml::xmlString(comment));
+      if (tools)
+            xml.tag("tools",     Xml::xmlString(tools));
+      if (creator)
+            xml.tag("creator",   Xml::xmlString(creator));
+      if (product)
+            xml.tag("product",   Xml::xmlString(product));
+      if (copyright)
+            xml.tag("copyright", Xml::xmlString(copyright));
+
+      foreach(Preset* p, presets) {
+            xml.stag(QString("Preset name=\"%1\" preset=\"%2\" bank=\"%3\"")
+               .arg(p->name).arg(p->preset).arg(p->bank));
+            foreach(Zone* z, p->zones)
+                  write(xml, z);
+            xml.etag();
+            }
+      foreach(Instrument* instrument, instruments) {
+            xml.stag(QString("Instrument name=\"%1\"").arg(instrument->name));
+            foreach(Zone* z, instrument->zones)
+                  write(xml, z);
+            xml.etag();
+            }
+      int idx = 0;
+      foreach(Sample* s, samples) {
+            xml.stag(QString("Sample name=\"%1\"").arg(s->name));
+            xml.tag("start",       s->start);
+            xml.tag("end",         s->end);
+            xml.tag("loopstart",   s->loopstart);
+            xml.tag("loopend",     s->loopend);
+            xml.tag("samplerate",  s->samplerate);
+            xml.tag("origpitch",   s->origpitch);
+            if (s->pitchadj)
+                  xml.tag("pitchadj", s->pitchadj);
+            xml.tag("sampletype",  s->sampletype);
+            xml.etag();
+            writeSampleFile(s, QString("%1").arg(idx));
+            ++idx;
+            }
+      xml.etag();
+      return true;
+      }
+
+static const char* generatorNames[] = {
+      "StartAddrOfs", "EndAddrOfs", "StartLoopAddrOfs",
+      "EndLoopAddrOfs", "StartAddrCoarseOfs", "ModLFO2Pitch",
+      "VibLFO2Pitch", "ModEnv2Pitch", "FilterFc", "FilterQ",
+      "ModLFO2FilterFc", "ModEnv2FilterFc", "EndAddrCoarseOfs",
+      "ModLFO2Vol", "Unused1", "ChorusSend", "ReverbSend", "Pan",
+      "Unused2", "Unused3", "Unused4",
+      "ModLFODelay", "ModLFOFreq", "VibLFODelay", "VibLFOFreq",
+      "ModEnvDelay", "ModEnvAttack", "ModEnvHold", "ModEnvDecay",
+      "ModEnvSustain", "ModEnvRelease", "Key2ModEnvHold",
+      "Key2ModEnvDecay", "VolEnvDelay", "VolEnvAttack",
+      "VolEnvHold", "VolEnvDecay", "VolEnvSustain", "VolEnvRelease",
+      "Key2VolEnvHold", "Key2VolEnvDecay", "Instrument",
+      "Reserved1", "KeyRange", "VelRange",
+      "StartLoopAddrCoarseOfs", "Keynum", "Velocity",
+      "Attenuation", "Reserved2", "EndLoopAddrCoarseOfs",
+      "CoarseTune", "FineTune", "SampleId", "SampleModes",
+      "Reserved3", "ScaleTune", "ExclusiveClass", "OverrideRootKey",
+      "Dummy"
+      };
+
+//---------------------------------------------------------
 //   write
 //---------------------------------------------------------
 
-bool SoundFont::write()
+void SoundFont::write(Xml& xml, Zone* z)
       {
+      xml.stag("Zone");
+      foreach(GeneratorList* g, z->generators) {
+            const char* name = generatorNames[g->gen];
+            if (g->gen == Gen_KeyRange || g->gen == Gen_VelRange)
+                  xml.tagE(QString("Generator name=\"%1\" lo=\"%2\" hi=\"%3\"")
+                     .arg(name).arg(g->amount.lo).arg(g->amount.hi));
+            else if (g->gen == Gen_Instrument) {
+                  int idx = g->amount.uword;
+                  xml.tag("Instrument", instruments[idx]->name);
+                  }
+            else if (g->gen == Gen_SampleId) {
+                  int idx = g->amount.uword;
+                  xml.tag("SampleId", samples[idx]->name);
+                  }
+            else
+                  xml.tagE(QString("Generator name=\"%1\" val=\"%2\"")
+                     .arg(name).arg(g->amount.sword));
+            }
+      foreach(ModulatorList* m, z->modulators) {
+            xml.stag("Modulator");
+            xml.tag("src", m->src);
+            xml.tag("dst", m->dst);
+            xml.tag("amount", m->amount);
+            xml.tag("amtSrc", m->amtSrc);
+            xml.tag("transform", m->transform);
+            xml.etag();
+            }
+      xml.etag();
+      }
+
+//---------------------------------------------------------
+//   write
+//---------------------------------------------------------
+
+bool SoundFont::write(QFile* f, double oggQuality, double oggAmp, qint64 oggSerial)
+      {
+      file = f;
+      _oggQuality = oggQuality;
+      _oggAmp = oggAmp;
+      _oggSerial = oggSerial;
       qint64 riffLenPos;
       qint64 listLenPos;
       try {
@@ -668,9 +769,6 @@ bool SoundFont::write()
                   writeStringSection("ICMT", comment);
             if (copyright)
                   writeStringSection("ICOP", copyright);
-            if (irom)
-                  writeStringSection("irom", irom);
-            writeIver();
 
             qint64 pos = file->pos();
             file->seek(listLenPos);
@@ -718,22 +816,22 @@ bool SoundFont::write()
       return true;
       }
 
-bool SoundFont::compress(QFile* f, double oggQuality, double oggAmp, qint64 oggSerial)
-      {
-      file = f;
-      _compress = true;
-      _oggQuality = oggQuality;
-      _oggAmp = oggAmp;
-      _oggSerial = oggSerial;
+//---------------------------------------------------------
+//   readXml
+//---------------------------------------------------------
 
-      return write();
-      }
-
-bool SoundFont::uncompress(QFile* f)
+bool SoundFont::readXml(QFile* f)
       {
-      file = f;
-      _compress = false;
-      return write();
+      QDomDocument doc;
+      int line, column;
+      QString err;
+      if (!doc.setContent(f, false, &err, &line, &column)) {
+            QString s;
+            printf("error reading file %s at line %d column %d: %s\n",
+               qPrintable(f->fileName()), line, column, qPrintable(err));
+            return false;
+            }
+      return true;
       }
 
 //---------------------------------------------------------
@@ -772,33 +870,12 @@ void SoundFont::writeIfil()
       write("ifil", 4);
       writeDword(4);
       unsigned char data[4];
-      if (_compress) {
+      if (writeCompressed)
             version.major = 3;
-            version.minor = 0;
-      } else {
-            version.major = 2;
-            version.minor = 1;
-      }
       data[0] = version.major;
       data[1] = version.major >> 8;
       data[2] = version.minor;
       data[3] = version.minor >> 8;
-      write((char*)data, 4);
-      }
-
-//---------------------------------------------------------
-//   writeIVer
-//---------------------------------------------------------
-
-void SoundFont::writeIver()
-      {
-      write("iver", 4);
-      writeDword(4);
-      unsigned char data[4];
-      data[0] = iver.major;
-      data[1] = iver.major >> 8;
-      data[2] = iver.minor;
-      data[3] = iver.minor >> 8;
       write((char*)data, 4);
       }
 
@@ -812,36 +889,35 @@ void SoundFont::writeSmpl()
 
       qint64 pos = file->pos();
       writeDword(0);
-      int currentSamplePos = 0;
-      if (_compress) {
-            // Compress wave data
+      int sampleLen = 0;
+      if (writeCompressed) {
             foreach(Sample* s, samples) {
-                  // Loop start and end are now based on the beginning of each sample
-                  s->loopstart -= s->start;
-                  s->loopend -= s->start;
-
-                  // OGG flag added
                   s->sampletype |= 0x10;
-                  int len  = writeCompressedSample(s); // In byte
-                  s->start = currentSamplePos;
-                  currentSamplePos += len;
-                  s->end = currentSamplePos;
+                  int len  = writeCompressedSample(s);
+                  s->start = sampleLen;
+                  sampleLen += len;
+                  s->end = sampleLen;
                   }
             }
       else {
-            // Uncompress from OGG data
+            char* buffer = new char[sampleLen];
+            QFile f(path);
+            if (!f.open(QIODevice::ReadOnly))
+                  throw(QString("cannot open <%1>").arg(f.fileName()));
             foreach(Sample* s, samples) {
-                  // OGG flag is removed
-                  s->sampletype &= ~0x10;
-                  int len = writeUncompressedSample(s) / 2; // In sample data points (16 bits)
-                  s->start = currentSamplePos;
-                  currentSamplePos += len;
-                  s->end = currentSamplePos;
+                  f.seek(samplePos + s->start * sizeof(short));
 
-                  // Loop start and end are now based on the beginning of the section "smpl"
+                  int len = (s->end - s->start) * sizeof(short);
+                  f.read(buffer, len);
+                  write(buffer, len);
+                  s->start = sampleLen / sizeof(short);
+                  sampleLen += len;
+                  s->end = sampleLen / sizeof(short);
                   s->loopstart += s->start;
                   s->loopend   += s->start;
                   }
+            f.close();
+            delete[] buffer;
             }
       qint64 npos = file->pos();
       file->seek(pos);
@@ -864,6 +940,7 @@ void SoundFont::writePhdr()
             zoneIdx += p->zones.size();
             }
       Preset p;
+      memset(&p, sizeof(p), 0);
       writePreset(zoneIdx, &p);
       }
 
@@ -994,6 +1071,7 @@ void SoundFont::writeInst()
             zoneIdx += p->zones.size();
             }
       Instrument p;
+      memset(&p, sizeof(p), 0);
       writeInstrument(zoneIdx, &p);
       }
 
@@ -1022,6 +1100,7 @@ void SoundFont::writeShdr()
       foreach(const Sample* s, samples)
             writeSample(s);
       Sample s;
+      memset(&s, 0, sizeof(s));
       writeSample(&s);
       }
 
@@ -1043,8 +1122,52 @@ void SoundFont::writeSample(const Sample* s)
       writeDword(s->samplerate);
       writeByte(s->origpitch);
       writeChar(s->pitchadj);
-      writeWord(s->sampleLink);
+      writeWord(0);
       writeWord(s->sampletype);
+      }
+
+//---------------------------------------------------------
+//   writeSampleFile
+//---------------------------------------------------------
+
+bool SoundFont::writeSampleFile(Sample* s, QString name)
+      {
+      QString path = "waves/" + name + ".ogg";
+
+      QFile f(path);
+      if (!f.open(QIODevice::ReadOnly)) {
+            fprintf(stderr, "cannot open <%s>\n", qPrintable(f.fileName()));
+            return false;
+            }
+      f.seek(samplePos + s->start * sizeof(short));
+      int len = s->end - s->start;
+      short buffer[len];
+      f.read((char*)buffer, len * sizeof(short));
+      f.close();
+
+      // int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+      int format = SF_FORMAT_OGG | SF_FORMAT_VORBIS;
+
+      SF_INFO info;
+      memset(&info, 0, sizeof(info));
+      info.channels   = 1;
+      info.samplerate = s->samplerate;
+      info.format     = format;
+
+      SNDFILE* sf = sf_open(qPrintable(path), SFM_WRITE, &info);
+      if (sf == 0) {
+            fprintf(stderr, "open soundfile <%s> failed: %s\n",
+               qPrintable(path), sf_strerror(sf));
+            return false;
+            }
+
+      sf_write_short(sf, buffer, len);
+
+      if (sf_close(sf)) {
+            fprintf(stderr, "close soundfile failed\n");
+            return false;
+            }
+      return true;
       }
 
 //---------------------------------------------------------
@@ -1060,7 +1183,7 @@ int SoundFont::writeCompressedSample(Sample* s)
             }
       f.seek(samplePos + s->start * sizeof(short));
       int samples = s->end - s->start;
-      short * ibuffer = new short[samples];
+      short ibuffer[samples];
       f.read((char*)ibuffer, samples * sizeof(short));
       f.close();
 
@@ -1076,28 +1199,24 @@ int SoundFont::writeCompressedSample(Sample* s)
       int ret = vorbis_encode_init_vbr(&vi, 1, s->samplerate, _oggQuality);
       if (ret) {
             printf("vorbis init failed\n");
-            delete [] ibuffer;
             return false;
             }
       vorbis_comment_init(&vc);
       vorbis_analysis_init(&vd, &vi);
       vorbis_block_init(&vd, &vb);
-      srand(time(nullptr));
+      srand(time(NULL));
       ogg_stream_init(&os, _oggSerial == std::numeric_limits<qint64>::max() ? rand() : (int)_oggSerial);
 
       ogg_packet header;
       ogg_packet header_comm;
       ogg_packet header_code;
 
-      // Keep a track of the attenuation used before the compression
-      vorbis_comment_add(&vc, QString("AMP=%1\0").arg(_oggAmp).toStdString().c_str());
-
       vorbis_analysis_headerout(&vd, &vc, &header, &header_comm, &header_code);
       ogg_stream_packetin(&os, &header);
       ogg_stream_packetin(&os, &header_comm);
       ogg_stream_packetin(&os, &header_code);
 
-      char* obuf = new char[1048576]; // 1024 * 1024
+      char obuf[1024 * 1024];
       char* p = obuf;
 
       for (;;) {
@@ -1178,9 +1297,16 @@ int SoundFont::writeCompressedSample(Sample* s)
       int n = p - obuf;
       write(obuf, n);
 
-      delete [] obuf;
-      delete [] ibuffer;
       return n;
+      }
+
+//---------------------------------------------------------
+//   readCompressedSample
+//---------------------------------------------------------
+
+char* SoundFont::readCompressedSample(Sample* s)
+      {
+      return 0;
       }
 
 //---------------------------------------------------------
@@ -1196,7 +1322,7 @@ bool SoundFont::writeCSample(Sample* s, int idx)
             }
       fi.seek(samplePos + s->start * sizeof(short));
       int samples = s->end - s->start;
-      short * ibuffer = new short[samples];
+      short ibuffer[samples];
       fi.read((char*)ibuffer, samples * sizeof(short));
       fi.close();
 
@@ -1216,7 +1342,6 @@ bool SoundFont::writeCSample(Sample* s, int idx)
             fprintf(f, ",\n      ");
             }
       fprintf(f, "\n      };\n");
-      delete [] ibuffer;
       return true;
       }
 
@@ -1241,6 +1366,7 @@ static bool checkInstrument(QList<int> pnums, QList<Preset*> presets, int instrI
       }
 
 static bool checkInstrument(QList<Preset*> presets, int instrIdx) {
+      bool result = false;
       for(int i = 0; i < presets.size(); i++) {
             Preset* p = presets[i];
             Zone* z = p->zones[0];
@@ -1267,6 +1393,7 @@ static bool checkSample(QList<int> pnums, QList<Preset*> presets, QList<Instrume
                   ++idx;
                   continue;
                   }
+            int zones = instrument->zones.size();
             foreach(Zone* z, instrument->zones) {
                   QList<GeneratorList*> gl;
                   foreach(GeneratorList* g, z->generators) {
@@ -1294,6 +1421,7 @@ static bool checkSample(QList<Preset*> presets, QList<Instrument*> instruments,
                   ++idx;
                   continue;
                   }
+            int zones = instrument->zones.size();
             foreach(Zone* z, instrument->zones) {
                   QList<GeneratorList*> gl;
                   foreach(GeneratorList* g, z->generators) {
@@ -1307,7 +1435,6 @@ static bool checkSample(QList<Preset*> presets, QList<Instrument*> instruments,
             }
       return false;
       }
-
 
 //---------------------------------------------------------
 //   writeCode
@@ -1335,7 +1462,7 @@ bool SoundFont::writeCode()
                   end = (i+1) * n;
             QList<int> sampleIdx;
             for (int idx = i * n; idx < end; ++idx) {
-                  if (_smallSf && !checkSample(presets, instruments, idx))
+                  if (smallSf && !checkSample(presets, instruments, idx))
                         continue;
                   Sample* s = samples[idx];
                   writeCSample(s, idx);
@@ -1383,7 +1510,7 @@ bool SoundFont::writeCode()
       int idx2;
       int idx = 0;
       foreach(Instrument* instrument, instruments) {
-            if (_smallSf && !checkInstrument(presets, idx)) {
+            if (smallSf && !checkInstrument(presets, idx)) {
                   ++idx;
                   continue;
                   }
@@ -1398,6 +1525,7 @@ bool SoundFont::writeCode()
 
                   QList<GeneratorList*> gl;
                   foreach(GeneratorList* g, z->generators) {
+                        const char* name = generatorNames[g->gen];
                         if (g->gen == Gen_KeyRange) {
                               keyLo = g->amount.lo;
                               keyHi = g->amount.hi;
@@ -1410,7 +1538,7 @@ bool SoundFont::writeCode()
                               sampleIdx = g->amount.uword;
                         else
                               gl.append(g);
-                        if (_smallSf && g->gen == Gen_Pan)
+                        if (smallSf && g->gen == Gen_Pan)
                               g->amount.uword = 0;
                         }
                   int idx3 = 0;
@@ -1469,7 +1597,7 @@ bool SoundFont::writeCode()
       foreach(Preset* p, presets) {
             idx2 = 0;
             int zones = p->zones.size();
-            if (_smallSf)
+            if (smallSf)
                   zones = 1;
 
             foreach(Zone* z, p->zones) {
@@ -1480,6 +1608,7 @@ bool SoundFont::writeCode()
                   int instrIdx = -1;
 
                   foreach(GeneratorList* g, z->generators) {
+                        const char* name = generatorNames[g->gen];
                         if (g->gen == Gen_KeyRange) {
                               keyLo = g->amount.lo;
                               keyHi = g->amount.hi;
@@ -1508,7 +1637,7 @@ bool SoundFont::writeCode()
                         else
                               fprintf(f, "static PZone pz%d_%d(%d, %d, %d, %d, &instr%d);\n", idx, idx2, keyLo, keyHi, veloLo, veloHi, instrIdx);
                         }
-                  if (_smallSf)
+                  if (smallSf)
                         break;
                   ++idx2;
                   }
@@ -1525,7 +1654,6 @@ bool SoundFont::writeCode()
             ++idx;
             }
 
-
       fprintf(f, "static Preset* sfPresets[%d] = {\n", presets.size());
       for(int idx = 0; idx < presets.size(); ++idx)
             fprintf(f, "      &preset%d,   // %s\n", idx, presets[idx]->name);
@@ -1537,8 +1665,6 @@ bool SoundFont::writeCode()
       fclose(f);
       return true;
       }
-
-
 
 //---------------------------------------------------------
 //   writeCode
@@ -1604,6 +1730,7 @@ bool SoundFont::writeCode(QList<int> pnums)
                   QList<GeneratorList*> gl;
 
                   foreach(GeneratorList* g, z->generators) {
+                        const char* name = generatorNames[g->gen];
                         if (g->gen == Gen_KeyRange) {
                               keyLo = g->amount.lo;
                               keyHi = g->amount.hi;
@@ -1675,6 +1802,7 @@ bool SoundFont::writeCode(QList<int> pnums)
                   int veloHi   = 127;
                   int instrIdx = -1;
                   foreach(GeneratorList* g, z->generators) {
+                        const char* name = generatorNames[g->gen];
                         if (g->gen == Gen_KeyRange) {
                               keyLo = g->amount.lo;
                               keyHi = g->amount.hi;
@@ -1740,314 +1868,3 @@ void SoundFont::dumpPresets()
             ++idx;
             }
       }
-
-
-#ifndef SFTOOLS_NOXML
-static const char* generatorNames[] = {
-      "StartAddrOfs", "EndAddrOfs", "StartLoopAddrOfs",
-      "EndLoopAddrOfs", "StartAddrCoarseOfs", "ModLFO2Pitch",
-      "VibLFO2Pitch", "ModEnv2Pitch", "FilterFc", "FilterQ",
-      "ModLFO2FilterFc", "ModEnv2FilterFc", "EndAddrCoarseOfs",
-      "ModLFO2Vol", "Unused1", "ChorusSend", "ReverbSend", "Pan",
-      "Unused2", "Unused3", "Unused4",
-      "ModLFODelay", "ModLFOFreq", "VibLFODelay", "VibLFOFreq",
-      "ModEnvDelay", "ModEnvAttack", "ModEnvHold", "ModEnvDecay",
-      "ModEnvSustain", "ModEnvRelease", "Key2ModEnvHold",
-      "Key2ModEnvDecay", "VolEnvDelay", "VolEnvAttack",
-      "VolEnvHold", "VolEnvDecay", "VolEnvSustain", "VolEnvRelease",
-      "Key2VolEnvHold", "Key2VolEnvDecay", "Instrument",
-      "Reserved1", "KeyRange", "VelRange",
-      "StartLoopAddrCoarseOfs", "Keynum", "Velocity",
-      "Attenuation", "Reserved2", "EndLoopAddrCoarseOfs",
-      "CoarseTune", "FineTune", "SampleId", "SampleModes",
-      "Reserved3", "ScaleTune", "ExclusiveClass", "OverrideRootKey",
-      "Dummy"
-      };
-
-//---------------------------------------------------------
-//   writeXml
-//---------------------------------------------------------
-
-bool SoundFont::writeXml(QFile* f)
-      {
-      Xml xml(f);
-
-      xml.header();
-      xml.stag("Sfont");
-      xml.tag("version", QString("%1.%2").arg(version.major).arg(version.minor));
-      if (name)
-            xml.tag("name",      Xml::xmlString(name));
-      if (engine)
-            xml.tag("engine",    Xml::xmlString(engine));
-      if (date)
-            xml.tag("date",      Xml::xmlString(date));
-      if (comment)
-            xml.tag("comment",   Xml::xmlString(comment));
-      if (tools)
-            xml.tag("tools",     Xml::xmlString(tools));
-      if (creator)
-            xml.tag("creator",   Xml::xmlString(creator));
-      if (product)
-            xml.tag("product",   Xml::xmlString(product));
-      if (copyright)
-            xml.tag("copyright", Xml::xmlString(copyright));
-
-      foreach(Preset* p, presets) {
-            xml.stag(QString("Preset name=\"%1\" preset=\"%2\" bank=\"%3\"")
-               .arg(p->name).arg(p->preset).arg(p->bank));
-            foreach(Zone* z, p->zones)
-                  write(xml, z);
-            xml.etag();
-            }
-      foreach(Instrument* instrument, instruments) {
-            xml.stag(QString("Instrument name=\"%1\"").arg(instrument->name));
-            foreach(Zone* z, instrument->zones)
-                  write(xml, z);
-            xml.etag();
-            }
-      int idx = 0;
-      foreach(Sample* s, samples) {
-            xml.stag(QString("Sample name=\"%1\"").arg(s->name));
-            xml.tag("start",       s->start);
-            xml.tag("end",         s->end);
-            xml.tag("loopstart",   s->loopstart);
-            xml.tag("loopend",     s->loopend);
-            xml.tag("samplerate",  s->samplerate);
-            xml.tag("origpitch",   s->origpitch);
-            if (s->pitchadj)
-                  xml.tag("pitchadj", s->pitchadj);
-            xml.tag("sampletype",  s->sampletype);
-            xml.etag();
-            writeSampleFile(s, QString("%1").arg(idx));
-            ++idx;
-            }
-      xml.etag();
-      return true;
-      }
-
-//---------------------------------------------------------
-//   write
-//---------------------------------------------------------
-
-void SoundFont::write(Xml& xml, Zone* z)
-      {
-      xml.stag("Zone");
-      foreach(GeneratorList* g, z->generators) {
-            const char* name = generatorNames[g->gen];
-            if (g->gen == Gen_KeyRange || g->gen == Gen_VelRange)
-                  xml.tagE(QString("Generator name=\"%1\" lo=\"%2\" hi=\"%3\"")
-                     .arg(name).arg(g->amount.lo).arg(g->amount.hi));
-            else if (g->gen == Gen_Instrument) {
-                  int idx = g->amount.uword;
-                  xml.tag("Instrument", instruments[idx]->name);
-                  }
-            else if (g->gen == Gen_SampleId) {
-                  int idx = g->amount.uword;
-                  xml.tag("SampleId", samples[idx]->name);
-                  }
-            else
-                  xml.tagE(QString("Generator name=\"%1\" val=\"%2\"")
-                     .arg(name).arg(g->amount.sword));
-            }
-      foreach(ModulatorList* m, z->modulators) {
-            xml.stag("Modulator");
-            xml.tag("src", m->src);
-            xml.tag("dst", m->dst);
-            xml.tag("amount", m->amount);
-            xml.tag("amtSrc", m->amtSrc);
-            xml.tag("transform", m->transform);
-            xml.etag();
-            }
-      xml.etag();
-      }
-
-//---------------------------------------------------------
-//   writeSampleFile
-//---------------------------------------------------------
-
-bool SoundFont::writeSampleFile(Sample* s, QString name)
-      {
-      QString path = "waves/" + name + ".ogg";
-
-      QFile f(path);
-      if (!f.open(QIODevice::ReadOnly)) {
-            fprintf(stderr, "cannot open <%s>\n", qPrintable(f.fileName()));
-            return false;
-            }
-      f.seek(samplePos + s->start * sizeof(short));
-      int len = s->end - s->start;
-      short * buffer = new short[len];
-      f.read((char*)buffer, len * sizeof(short));
-      f.close();
-
-      // int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-      int format = SF_FORMAT_OGG | SF_FORMAT_VORBIS;
-
-      SF_INFO info;
-      memset(&info, 0, sizeof(info));
-      info.channels   = 1;
-      info.samplerate = s->samplerate;
-      info.format     = format;
-
-      SNDFILE* sf = sf_open(qPrintable(path), SFM_WRITE, &info);
-      if (sf == 0) {
-            fprintf(stderr, "open soundfile <%s> failed: %s\n",
-               qPrintable(path), sf_strerror(sf));
-            delete [] buffer;
-            return false;
-            }
-
-      sf_write_short(sf, buffer, len);
-      delete [] buffer;
-
-      if (sf_close(sf)) {
-            fprintf(stderr, "close soundfile failed\n");
-            return false;
-            }
-      return true;
-      }
-
-//---------------------------------------------------------
-//   readXml
-//---------------------------------------------------------
-
-bool SoundFont::readXml(QFile* f)
-      {
-      QDomDocument doc;
-      int line, column;
-      QString err;
-      if (!doc.setContent(f, false, &err, &line, &column)) {
-            QString s;
-            printf("error reading file %s at line %d column %d: %s\n",
-               qPrintable(f->fileName()), line, column, qPrintable(err));
-            return false;
-            }
-      return true;
-      }
-#endif
-
-
-struct VorbisData {
-    int pos;
-    QByteArray data;
-};
-
-static VorbisData vorbisData;
-static size_t ovRead(void* ptr, size_t size, size_t nmemb, void* datasource);
-static int ovSeek(void* datasource, ogg_int64_t offset, int whence);
-static long ovTell(void* datasource);
-static ov_callbacks ovCallbacks = { ovRead, ovSeek, nullptr, ovTell };
-
-//---------------------------------------------------------
-//   ovRead
-//---------------------------------------------------------
-
-static size_t ovRead(void* ptr, size_t size, size_t nmemb, void* datasource)
-{
-    VorbisData* vd = (VorbisData*)datasource;
-    size_t n = size * nmemb;
-    if (vd->data.size() < int(vd->pos + n))
-        n = vd->data.size() - vd->pos;
-    if (n) {
-        const char* src = vd->data.data() + vd->pos;
-        memcpy(ptr, src, n);
-        vd->pos += n;
-    }
-
-    return n;
-}
-
-//---------------------------------------------------------
-//   ovSeek
-//---------------------------------------------------------
-
-static int ovSeek(void* datasource, ogg_int64_t offset, int whence)
-{
-    VorbisData* vd = (VorbisData*)datasource;
-    switch(whence) {
-    case SEEK_SET:
-        vd->pos = offset;
-        break;
-    case SEEK_CUR:
-        vd->pos += offset;
-        break;
-    case SEEK_END:
-        vd->pos = vd->data.size() - offset;
-        break;
-    }
-    return 0;
-}
-
-//---------------------------------------------------------
-//   ovTell
-//---------------------------------------------------------
-
-static long ovTell(void* datasource)
-{
-    VorbisData* vd = (VorbisData*)datasource;
-    return vd->pos;
-}
-
-//---------------------------------------------------------
-//   writeUncompressedSample
-//---------------------------------------------------------
-
-int SoundFont::writeUncompressedSample(Sample* s)
-{
-    // Prepare input data
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) {
-        fprintf(stderr, "cannot open <%s>\n", qPrintable(f.fileName()));
-        return 0;
-    }
-    f.seek(samplePos + s->start);
-    int oggSize = s->end - s->start;
-    short * ibuffer = new short[oggSize];
-    f.read((char*)ibuffer, oggSize);
-    f.close();
-
-    vorbisData.pos  = 0;
-    vorbisData.data = QByteArray((char *)ibuffer, oggSize);
-
-    // Decode
-    QByteArray decodedData;
-    OggVorbis_File vf;
-    vorbisData.pos  = 0;
-    int length = 0;
-    if (ov_open_callbacks(&vorbisData, &vf, nullptr, 0, ovCallbacks) == 0)
-    {
-        double attenuation = 0;
-        for (int i = 0; i < vf.vc->comments; i++)
-        {
-            QString comment(vf.vc->user_comments[i]);
-            if (comment.contains("AMP="))
-            {
-                QStringList split = comment.split('=');
-                if (split.size() == 2)
-                {
-                    bool ok = false;
-                    attenuation = split[1].toDouble(&ok);
-                    if (!ok)
-                        attenuation = 0;
-                }
-            }
-        }
-        double linearAmp = pow(10.0, attenuation / 20.0);
-
-        short buffer[2048];
-        int numberRead = 0;
-        int section = 0;
-        do {
-            numberRead = ov_read(&vf, (char *)buffer, 2048 * sizeof(short), 0, 2, 1, &section);
-            for (unsigned int i = 0; i < numberRead / sizeof(short); i++)
-                buffer[i] = (double)buffer[i] / linearAmp;
-            write((char *)buffer, numberRead);
-            length += numberRead;
-        } while (numberRead);
-
-        ov_clear(&vf);
-    }
-
-    delete[] ibuffer;
-    return length;
-}

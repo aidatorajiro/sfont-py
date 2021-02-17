@@ -1,22 +1,25 @@
-#define SFTOOLS_NOXML
-
+#include "xml.h"
+#include "xml.cpp"
 #include "sfont.h"
 #include "sfont.cpp"
 
-extern "C" SfTools::SoundFont * read_sound_font (char * path) {
+bool smallSf = false;
+
+extern "C" SoundFont * read_sound_font (char * path) {
     const QString &qs = QString(path);
-    SfTools::SoundFont *sf = new SfTools::SoundFont(qs);
+    SoundFont *sf = new SoundFont(qs);
     sf->read();
     return sf;
 }
 
-extern "C" SfTools::SoundFont * new_sound_font () {
+extern "C" SoundFont * new_sound_font () {
     const QString &qs = QString("");
-    SfTools::SoundFont *sf = new SfTools::SoundFont(qs);
+    SoundFont *sf = new SoundFont(qs);
     return sf;
 }
 
-extern "C" bool write_sound_font (SfTools::SoundFont *sf, char * path) {
+extern "C" bool write_sound_font (SoundFont *sf, char * path) {
+    /*
     const QString &qs = QString(path);
     QFile f(qs);
     if (!f.open(QIODevice::ReadWrite)) {
@@ -29,7 +32,7 @@ extern "C" bool write_sound_font (SfTools::SoundFont *sf, char * path) {
         f.close();
         return false;
     }
-    f.close();
+    f.close();*/
     return true;
 }
 
