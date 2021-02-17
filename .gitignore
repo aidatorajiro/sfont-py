@@ -139,7 +139,8 @@ dmypy.json
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -161,7 +162,11 @@ Temporary Items
 .apdisk
 
 
+FluidR3_GS.sf2
 FluidR3_GM.sf2
+exp
+test_output.sf2
 bin
 *.dylib
 *.out
+*.dSYM

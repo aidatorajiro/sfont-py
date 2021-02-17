@@ -5,7 +5,7 @@ import urllib.request
 import tarfile
 import io
 
-if not os.path.exists("FluidR3_GM.sf2"):
+if not os.path.exists("FluidR3_GS.sf2"):
     url = "http://deb.debian.org/debian/pool/main/f/fluid-soundfont/fluid-soundfont_3.1.orig.tar.gz"
 
     print("Downloading " + url + "...")
@@ -17,11 +17,11 @@ if not os.path.exists("FluidR3_GM.sf2"):
 
     tar = tarfile.open(fileobj=bio, mode="r:gz")
 
-    data = tar.extractfile("fluid-soundfont-3.1/FluidR3_GM.sf2").read()
+    data = tar.extractfile("fluid-soundfont-3.1/FluidR3_GS.sf2").read()
 
-    print("Writing to FluidR3_GM.sf2...")
+    print("Writing to FluidR3_GS.sf2...")
 
-    with open("FluidR3_GM.sf2", "wb") as f:
+    with open("FluidR3_GS.sf2", "wb") as f:
         f.write(data)
 
 class SfontTest(unittest.TestCase):
@@ -37,9 +37,9 @@ class SfontTest(unittest.TestCase):
         self.assertEqual(ctypes.sizeof(SoundFont), 128)
 
     def test_data(self):
-        sf = sfont.read_sound_font(b"FluidR3_GM.sf2").contents
-        self.assertEqual(sf.presets.size(), 189)
-        self.assertEqual(sf.presets[10].name, b'Burst Noise')
+        sf = sfont.read_sound_font(b"FluidR3_GS.sf2").contents
+        self.assertEqual(sf.presets.size(), 33)
+        self.assertEqual(sf.presets[10].name, b'Screaming')
     
     def test_qlist_new(self):
         num = 114514

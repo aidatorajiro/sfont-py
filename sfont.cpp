@@ -900,14 +900,13 @@ void SoundFont::writeSmpl()
                   }
             }
       else {
-            char* buffer = new char[sampleLen];
             QFile f(path);
             if (!f.open(QIODevice::ReadOnly))
                   throw(QString("cannot open <%1>").arg(f.fileName()));
             foreach(Sample* s, samples) {
-                  f.seek(samplePos + s->start * sizeof(short));
-
                   int len = (s->end - s->start) * sizeof(short);
+                  char* buffer = new char[len];
+                  f.seek(samplePos + s->start * sizeof(short));
                   f.read(buffer, len);
                   write(buffer, len);
                   s->start = sampleLen / sizeof(short);
@@ -915,9 +914,9 @@ void SoundFont::writeSmpl()
                   s->end = sampleLen / sizeof(short);
                   s->loopstart += s->start;
                   s->loopend   += s->start;
+                  delete[] buffer;
                   }
             f.close();
-            delete[] buffer;
             }
       qint64 npos = file->pos();
       file->seek(pos);
