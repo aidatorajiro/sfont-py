@@ -16,6 +16,23 @@ extern "C" SfTools::SoundFont * new_sound_font () {
     return sf;
 }
 
+extern "C" bool write_sound_font (SfTools::SoundFont *sf, char * path) {
+    const QString &qs = QString(path);
+    QFile f(qs);
+    if (!f.open(QIODevice::ReadWrite)) {
+        fprintf(stderr, "cannot open %s\n", f.fileName().toLocal8Bit().data());
+        return false;
+    }
+    sf->file = &f;
+    if (!sf->write()) {
+        fprintf(stderr, "cannot write successfully\n");
+        f.close();
+        return false;
+    }
+    f.close();
+    return true;
+}
+
 extern "C" int qlist_size (QList<void *> *in) {
     return in->size();
 }

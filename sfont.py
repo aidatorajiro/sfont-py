@@ -220,3 +220,6 @@ sfont.qlist_new.restype = POINTER(c_void_p)
 
 sfont.new_sound_font.argtypes = []
 sfont.new_sound_font.restype = POINTER(SoundFont)
+
+sfont.write_sound_font.argtypes = [POINTER(SoundFont), c_char_p]
+sfont.write_sound_font.restype = c_bool
