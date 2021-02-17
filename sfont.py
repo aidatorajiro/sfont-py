@@ -197,3 +197,6 @@ sfont.qlist_size.restype = c_int
 
 sfont.qlist_first.argtypes = [POINTER(c_void_p)]
 sfont.qlist_first.restype = POINTER(c_void_p)
+
+sfont.new_sound_font.argtypes = []
+sfont.new_sound_font.restype = POINTER(SoundFont)
