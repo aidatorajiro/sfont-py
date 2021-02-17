@@ -93,7 +93,12 @@ def QList(in_type):
         ]
         
         datatype = in_type
-        
+        def __len__(self):
+            return self.size()
+        def __getitem__(self, key):
+            return self.array()[key]
+        def __setitem__(self, key, value):
+            self.array()[key] = value
         def size(self):
             return sfont.qlist_size(pointer(c_void_p(self.ptr)))
         def array(self):
@@ -114,7 +119,6 @@ def mkList(py_lst, datatype=None):
     qlist = cast(sfont.qlist_new(size, cast(pointer(simple_lst), POINTER(c_void_p))),
                  POINTER(QList(POINTER(datatype))))[0]
     return qlist
-
 
 class ModulatorList(Structure):
     _fields_ = [
