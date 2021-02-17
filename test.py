@@ -49,6 +49,11 @@ class SfontTest(unittest.TestCase):
                      POINTER(QList(POINTER(c_int64))))[0]
         self.assertEqual(qlist.size(), size)
         self.assertEqual(qlist.array()[5][0], num)
+    
+    def test_mkList(self):
+        qlist = mkList([c_int64(1),c_int64(2),c_int64(3)])
+        self.assertEqual(qlist.size(), 3)
+        self.assertEqual(qlist.array()[1][0], 2)
 
 if __name__ == '__main__':
     unittest.main()

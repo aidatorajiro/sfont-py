@@ -106,9 +106,15 @@ def QList(in_type):
     ALL_QLISTS[in_type] = Insta
     return Insta
 
-def mkList(list, datatype):
-    new = cast(sfont.qlist_new(), POINTER(QList(datatype)))[0]
-    len(list)
+def mkList(py_lst, datatype=None):
+    if datatype is None:
+        datatype = type(py_lst[0])
+    size = len(py_lst)
+    simple_lst = (c_void_p * size)(*map(lambda x: cast(pointer(x), c_void_p), py_lst))
+    qlist = cast(sfont.qlist_new(size, cast(pointer(simple_lst), POINTER(c_void_p))),
+                 POINTER(QList(POINTER(datatype))))[0]
+    return qlist
+
 
 class ModulatorList(Structure):
     _fields_ = [
