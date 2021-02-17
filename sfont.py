@@ -92,7 +92,7 @@ def QList(in_type):
             ("ptr", c_void_p)
         ]
         
-        datatype = in_type
+        datatype = POINTER(in_type)
         def __len__(self):
             return self.size()
         def __getitem__(self, key):
@@ -117,7 +117,7 @@ def mkList(py_lst, datatype=None):
     size = len(py_lst)
     simple_lst = (c_void_p * size)(*map(lambda x: cast(pointer(x), c_void_p), py_lst))
     qlist = cast(sfont.qlist_new(size, cast(pointer(simple_lst), POINTER(c_void_p))),
-                 POINTER(QList(POINTER(datatype))))[0]
+                 POINTER(QList(datatype)))[0]
     return qlist
 
 class ModulatorList(Structure):
@@ -143,8 +143,8 @@ class GeneratorList(Structure):
 
 class Zone(Structure):
     _fields_ = [
-        ("generators", QList(POINTER(GeneratorList))), # QList<GeneratorList*>
-        ("modulators", QList(POINTER(ModulatorList))), # QList<ModulatorList*>
+        ("generators", QList(GeneratorList)), # QList<GeneratorList*>
+        ("modulators", QList(ModulatorList)), # QList<ModulatorList*>
         ("instrumentIndex", c_int),
     ]
 
@@ -157,14 +157,14 @@ class Preset(Structure):
         ("library", c_int),
         ("genre", c_int),
         ("morphology", c_int),
-        ("zones", QList(POINTER(Zone))), # QList<Zone*>
+        ("zones", QList(Zone)), # QList<Zone*>
     ]
 
 class Instrument(Structure):
     _fields_ = [
         ("name", c_char_p),
         ("index", c_int),
-        ("zones", QList(POINTER(Zone))), # QList<Zone*>
+        ("zones", QList(Zone)), # QList<Zone*>
     ]
 
 class Sample(Structure):
@@ -197,11 +197,11 @@ class SoundFont(Structure):
         ("iver", sfVersionTag), # sfVersionTag
         ("samplePos", c_int),
         ("sampleLen", c_int),
-        ("presets", QList(POINTER(Preset))), # QList<Preset*>
-        ("instruments", QList(POINTER(Instrument))), # QList<Instrument*>
-        ("pZones", QList(POINTER(Zone))), # QList<Zone*>
-        ("iZones", QList(POINTER(Zone))), # QList<Zone*>
-        ("samples", QList(POINTER(Sample))), # QList<Sample*>
+        ("presets", QList(Preset)), # QList<Preset*>
+        ("instruments", QList(Instrument)), # QList<Instrument*>
+        ("pZones", QList(Zone)), # QList<Zone*>
+        ("iZones", QList(Zone)), # QList<Zone*>
+        ("samples", QList(Sample)), # QList<Sample*>
     ]
 
 sfont = cdll.LoadLibrary("sfont.dylib")

@@ -46,7 +46,7 @@ class SfontTest(unittest.TestCase):
         size = 13
         orig_lst = (POINTER(c_int64) * size)(*map(lambda x: pointer(c_int64(x)), [num] * size))
         qlist = cast(sfont.qlist_new(size, cast(pointer(orig_lst), POINTER(c_void_p))),
-                     POINTER(QList(POINTER(c_int64)))).contents
+                     POINTER(QList(c_int64))).contents
         self.assertEqual(qlist.size(), size)
         self.assertEqual(qlist[5], num)
     
