@@ -96,16 +96,16 @@ def QList(in_type):
         def __len__(self):
             return self.size()
         def __getitem__(self, key):
-            return self.raw_array()[key][0]
+            return self.raw_array()[0][key][0]
         def __setitem__(self, key, value):
-            self.raw_array()[key][0] = value
+            self.raw_array()[0][key][0] = value
         def size(self):
             return sfont.qlist_size(pointer(c_void_p(self.ptr)))
         def raw_array(self):
             if self.size() == 0:
                 return []
             else:
-                return cast(sfont.qlist_first(pointer(c_void_p(self.ptr))), POINTER(self.datatype * self.size()))[0]
+                return cast(sfont.qlist_first(pointer(c_void_p(self.ptr))), POINTER(self.datatype * self.size()))
     
     Insta.__name__ = "QList_%s" % in_type.__name__
     ALL_QLISTS[in_type] = Insta
