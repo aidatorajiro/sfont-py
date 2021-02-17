@@ -19,20 +19,18 @@ extern "C" SoundFont * new_sound_font () {
 }
 
 extern "C" bool write_sound_font (SoundFont *sf, char * path) {
-    /*
     const QString &qs = QString(path);
     QFile f(qs);
     if (!f.open(QIODevice::ReadWrite)) {
         fprintf(stderr, "cannot open %s\n", f.fileName().toLocal8Bit().data());
         return false;
     }
-    sf->file = &f;
-    if (!sf->write()) {
+    if (!sf->write(&f, 0, 0, 0)) {
         fprintf(stderr, "cannot write successfully\n");
         f.close();
         return false;
     }
-    f.close();*/
+    f.close();
     return true;
 }
 

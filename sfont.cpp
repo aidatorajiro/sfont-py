@@ -57,7 +57,7 @@ extern bool smallSf;    // create small sf
 
 #define BLOCK_SIZE 1024
 
-static const bool writeCompressed = true;
+static const bool writeCompressed = false;
 
 //---------------------------------------------------------
 //   Sample
